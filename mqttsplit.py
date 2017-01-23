@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import paho.mqtt.client as mqtt
 import json
 import certifi
@@ -15,6 +17,26 @@ def split(data, key):
             yield from split(v, "{}/{}".format(key, k))
 
 
+def on_connect(client, userdata, flags, rc):
+    for topic in args.topics:
+        client.subscribe(topic)
+
+
+def on_message(client, userdata, msg):
+    try:
+        data = json.loads(msg.payload.decode('utf-8'))
+        for (topic, payload) in split(data, msg.topic):
+            if topic != msg.topic:
+                client.publish(topic, json.dumps(payload, separators=(',', ':')))
+    except ValueError:
+        # Ignore invalid JSON
+        pass
+
+
+def on_log(client, userdata, level, buf):
+    print(level, buf)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False, prog="mqttsplit")
     parser.add_argument('topics', metavar='TOPIC', type=str, nargs='+', help='topics to subscribe to')
@@ -30,24 +52,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     client = mqtt.Client()
-
-    def on_connect(client, userdata, flags, rc):
-        for topic in args.topics:
-            client.subscribe(topic)
-
-    def on_message(client, userdata, msg):
-        try:
-            data = json.loads(msg.payload.decode('utf-8'))
-            for (topic, payload) in split(data, msg.topic):
-                if topic != msg.topic:
-                    client.publish(topic, json.dumps(payload, separators=(',', ':')))
-        except ValueError:
-            # Ignore invalid JSON
-            pass
-
-    def on_log(client, userdata, level, buf):
-        print(level, buf)
-
     client.on_connect = on_connect
     client.on_message = on_message
 
