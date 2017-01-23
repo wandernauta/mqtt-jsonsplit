@@ -1,0 +1,70 @@
+# mqtt-jsonsplit
+
+**mqtt-jsonsplit** is a simple Python script that listens to JSON messages on a
+MQTT topic. It will then recursively split JSON objects and arrays into their
+components and republish them under a subtopic. For example, if mqttsplit
+receives the following message on `test`:
+
+    {"foo": {"bar": "baz"}, "colors": ["red", "green", "blue"]}
+
+It will publish the following messages (in order):
+
+    test/foo          {"bar":"baz"}
+    test/foo/bar      "baz"
+    test/colors       ["red","green","blue"]
+    test/colors/0     "red"
+    test/colors/1     "green"
+    test/colors/2     "blue"
+
+This is useful with programs like [Telegraf][] that spit out hierarchical JSON
+data. It allows you to subscribe to only the subset of the message that
+interests you.
+
+mqttsplit silently ignores messages that are invalid JSON. Wildcards are
+allowed, but be careful with `#`: you probably don't want mqttsplit to split
+its own output.
+
+## Usage
+
+    usage: mqttsplit [-h HOST] [-u USER] [-P PASS] [-k SECONDS] [-p PORT] [--ssl]
+                     [--debug] [--help] [-v]
+                     TOPIC [TOPIC ...]
+    
+    positional arguments:
+      TOPIC                 topics to subscribe to
+    
+    optional arguments:
+      -h HOST, --host HOST
+      -u USER, --username USER
+      -P PASS, --password PASS
+      -k SECONDS, --keepalive-time SECONDS
+      -p PORT, --port PORT
+      --ssl
+      --debug
+      --help
+      -v, --version         show program's version number and exit
+
+## License
+
+    Copyright (c) 2016, 2017 Wander Nauta
+    
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+    
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+    
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+
+[Telegraf]: https://github.com/influxdata/telegraf
